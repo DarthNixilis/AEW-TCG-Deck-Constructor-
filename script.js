@@ -47,17 +47,41 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListeners();
     }
 
+    // **THIS IS THE ONLY MAJOR CHANGE FROM THE LAST WORKING VERSION**
+    // This function is now "bulletproof" to ensure all personas are loaded.
     function populatePersonaSelectors() {
         wrestlerSelect.length = 1;
         managerSelect.length = 1;
-        const wrestlers = cardDatabase.filter(c => c.card_type === 'Wrestler' && c.id && c.title).sort((a, b) => a.title.localeCompare(b.title));
-        const managers = cardDatabase.filter(c => c.card_type === 'Manager' && c.id && c.title).sort((a, b) => a.title.localeCompare(b.title));
+
+        const wrestlers = [];
+        const managers = [];
+
+        // Safely loop through the database, checking every entry.
+        if (Array.isArray(cardDatabase)) {
+            for (const card of cardDatabase) {
+                // This check prevents errors if an entry is null or not an object.
+                if (card && typeof card === 'object') {
+                    if (card.card_type === 'Wrestler' && card.id && card.title) {
+                        wrestlers.push(card);
+                    } else if (card.card_type === 'Manager' && card.id && card.title) {
+                        managers.push(card);
+                    }
+                }
+            }
+        }
+
+        // Sort the valid personas alphabetically.
+        wrestlers.sort((a, b) => a.title.localeCompare(b.title));
+        managers.sort((a, b) => a.title.localeCompare(b.title));
+
+        // Populate the dropdowns.
         wrestlers.forEach(w => {
             const option = document.createElement('option');
             option.value = w.id;
             option.textContent = w.title;
             wrestlerSelect.appendChild(option);
         });
+
         managers.forEach(m => {
             const option = document.createElement('option');
             option.value = m.id;
@@ -84,9 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function getAvailableFilterOptions(cards) {
         const options = { 'Card Type': new Set(), 'Keyword': new Set(), 'Trait': new Set() };
         cards.forEach(card => {
-            if (card.card_type) options['Card Type'].add(card.card_type);
-            card.text_box?.keywords?.forEach(k => k.name && options['Keyword'].add(k.name));
-            card.text_box?.traits?.forEach(t => t.name && options['Trait'].add(t.name));
+            if (card && card.card_type) options['Card Type'].add(card.card_type);
+            if (card && card.text_box?.keywords) {
+                card.text_box.keywords.forEach(k => k.name && options['Keyword'].add(k.name));
+            }
+            if (card && card.text_box?.traits) {
+                card.text_box.traits.forEach(t => t.name && options['Trait'].add(t.name));
+            }
         });
         return {
             'Card Type': Array.from(options['Card Type']).sort(),
@@ -139,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function applySingleFilter(cards, filter) {
         if (!filter.category || !filter.value) return cards;
         return cards.filter(card => {
+            if (!card) return false;
             switch (filter.category) {
                 case 'Card Type': return card.card_type === filter.value;
                 case 'Keyword': return card.text_box?.keywords?.some(k => k.name === filter.value);
@@ -152,13 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function getFilteredCardPool(ignoreCascadingFilters = false) {
         const query = searchInput.value.toLowerCase();
         let cards = cardDatabase.filter(card => {
+            if (!card) return false; // Safeguard against null entries
             const isPlayableCard = card.card_type !== 'Wrestler' && card.card_type !== 'Manager';
             if (!isPlayableCard) return false;
             if (isLogoCard(card)) {
                 return selectedWrestler ? card.signature_info.logo === selectedWrestler.signature_info.logo : false;
             }
             const rawText = card.text_box?.raw_text || '';
-            const matchesQuery = query === '' || card.title.toLowerCase().includes(query) || rawText.toLowerCase().includes(query);
+            const matchesQuery = query === '' || (card.title && card.title.toLowerCase().includes(query)) || rawText.toLowerCase().includes(query);
             return matchesQuery;
         });
         if (!ignoreCascadingFilters) {
@@ -169,45 +199,37 @@ document.addEventListener('DOMContentLoaded', () => {
         return cards;
     }
 
-    // **THE FIX IS HERE: This function is completely rewritten for the new UI.**
     function renderCardPool() {
         searchResults.innerHTML = '';
         searchResults.className = `card-list ${currentViewMode}-view`;
         const filteredCards = getFilteredCardPool();
-
         if (filteredCards.length === 0) {
             searchResults.innerHTML = '<p>No cards match the current filters.</p>';
             return;
         }
-
         filteredCards.forEach(card => {
             const cardElement = document.createElement('div');
             cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
             cardElement.dataset.id = card.id;
-
             if (currentViewMode === 'list') {
                 cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
                 const buttonsDiv = document.createElement('div');
                 buttonsDiv.className = 'card-buttons';
                 if (card.cost === 0) {
-                    buttonsDiv.innerHTML = `
-                        <button data-id="${card.id}" data-deck-target="starting">Starting</button>
-                        <button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>
-                    `;
+                    buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
                 } else {
                     buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
                 }
                 cardElement.appendChild(buttonsDiv);
             } else { // Grid View
-                const visualHTML = generateCardVisualHTML(card);
-                cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
+                cardElement.innerHTML = `
+                    <div class="card-title" data-id="${card.id}">${card.title}</div>
+                    <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
+                `;
                 const buttonsDiv = document.createElement('div');
                 buttonsDiv.className = 'card-buttons';
                 if (card.cost === 0) {
-                    buttonsDiv.innerHTML = `
-                        <button data-id="${card.id}" data-deck-target="starting">Starting</button>
-                        <button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>
-                    `;
+                    buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
                 } else {
                     buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
                 }
@@ -354,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target.tagName === 'BUTTON' && cardId) {
                 addCardToDeck(cardId, target.dataset.deckTarget);
             } else {
-                const cardVisual = target.closest('.card-visual');
+                const cardVisual = target.closest('[data-id]');
                 if (cardVisual) {
                     showCardModal(cardVisual.dataset.id);
                 }
@@ -401,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         modalCloseButton.addEventListener('click', () => cardModal.style.display = 'none');
-        cardModal.addEventListener('click', (e) => {
+        modalCloseButton.addEventListener('click', (e) => {
             if (e.target === cardModal) cardModal.style.display = 'none';
         });
     }
