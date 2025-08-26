@@ -2,7 +2,7 @@
 async function loadCardDatabase() {
     try {
         // **THE FIX IS HERE: Reverting to the simple, relative path.**
-        const response = await fetch('cardDatabase.json');
+        const response = await fetch('./cardDatabase.json');
         
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         cardDatabase = await response.json();
