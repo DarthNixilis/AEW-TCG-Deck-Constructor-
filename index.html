@@ -6,6 +6,8 @@
     <title>AEW TCG Deck Constructor</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
+
 <body>
     <header>
         <h1>AEW TCG Deck Constructor</h1>
@@ -14,37 +16,33 @@
     <main class="container">
         <!-- Left Panel: Card Pool & Filters -->
         <div class="search-panel">
-            <h2>Card Pool</h2>
+            <div class="panel-header">
+                <h2>Card Pool</h2>
+                <!-- NEW: View Toggle Button -->
+                <button id="viewModeToggle">Switch to Grid View</button>
+            </div>
             <div class="filter-controls">
                 <input type="text" id="searchInput" placeholder="Search card name or text...">
-                <div id="cascadingFiltersContainer">
-                    <!-- Filter dropdowns will be dynamically created here by JS -->
-                </div>
+                <div id="cascadingFiltersContainer"></div>
             </div>
-            <div id="searchResults" class="card-list"></div>
+            <!-- The card list will now have its view mode changed by JS -->
+            <div id="searchResults" class="card-list list-view"></div>
         </div>
 
         <!-- Right Panel: Persona, Decks, & Actions -->
         <div class="deck-panel">
             <div class="persona-selection">
                 <h2>Persona</h2>
-                <select id="wrestlerSelect">
-                    <option value="">-- Select Wrestler --</option>
-                </select>
-                <select id="managerSelect">
-                    <option value="">-- Select Manager --</option>
-                </select>
+                <select id="wrestlerSelect"><option value="">-- Select Wrestler --</option></select>
+                <select id="managerSelect"><option value="">-- Select Manager --</option></select>
             </div>
 
-            <!-- NEW: Persona & Signature Card Display Area -->
             <div id="personaDisplay" class="persona-display-container"></div>
 
-            <button id="buildModeToggle">Building: <span id="currentMode">Starting Deck</span></button>
-
-            <h2>Starting Deck (<span id="startingDeckCount">0</span>/24)</h2>
+            <h2 id="startingDeckHeader">Starting Deck (<span id="startingDeckCount">0</span>/24)</h2>
             <div id="startingDeckList" class="deck-list-small"></div>
 
-            <h2>Purchase Deck (<span id="purchaseDeckCount">0</span>/36+)</h2>
+            <h2 id="purchaseDeckHeader">Purchase Deck (<span id="purchaseDeckCount">0</span>/36+)</h2>
             <div id="purchaseDeckList" class="deck-list-small"></div>
 
             <div class="deck-actions">
@@ -54,7 +52,7 @@
         </div>
     </main>
 
-    <!-- NEW: Modal for displaying card details -->
+    <!-- Modal for displaying card details -->
     <div id="cardModal" class="modal-backdrop" style="display: none;">
         <div class="modal-content">
             <span class="modal-close-button">&times;</span>
@@ -64,6 +62,7 @@
 
     <script src="script.js"></script>
 </body>
+
 
 
 </html>

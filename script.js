@@ -11,12 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearDeckBtn = document.getElementById('clearDeck');
     const wrestlerSelect = document.getElementById('wrestlerSelect');
     const managerSelect = document.getElementById('managerSelect');
-    const buildModeToggle = document.getElementById('buildModeToggle');
-    const currentModeSpan = document.getElementById('currentMode');
     const personaDisplay = document.getElementById('personaDisplay');
     const cardModal = document.getElementById('cardModal');
     const modalCardContent = document.getElementById('modalCardContent');
     const modalCloseButton = document.querySelector('.modal-close-button');
+    const viewToggleBtn = document.getElementById('viewToggleBtn');
 
     // --- STATE MANAGEMENT ---
     let cardDatabase = [];
@@ -24,8 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let purchaseDeck = [];
     let selectedWrestler = null;
     let selectedManager = null;
-    let currentBuildMode = 'starting';
     let activeFilters = [{}, {}, {}];
+    let currentViewMode = 'list'; // 'list' or 'grid'
 
     // --- DATA FETCHING ---
     async function loadCardDatabase() {
@@ -56,15 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- CORE GAME LOGIC & HELPERS ---
-    /**
-     * **NEW HELPER FUNCTION**
-     * Converts a string (like a card title) to PascalCase.
-     * Example: "V-Trigger" -> "VTrigger", "And Watch for the Shoe!" -> "AndWatchForTheShoe"
-     */
     function toPascalCase(str) {
         return str.replace(/[^a-zA-Z0-9]+(.)?/g, (match, chr) => chr ? chr.toUpperCase() : '').replace(/^./, (match) => match.toUpperCase());
     }
-
     function isSignatureFor(card, wrestler) {
         if (!wrestler || !card) return false;
         if (card.signature_info?.logo && card.signature_info.logo === wrestler.signature_info?.logo) return true;
@@ -72,10 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawText = card.text_box?.raw_text || '';
         return rawText.includes(wrestler.title) || rawText.includes(wrestlerFirstName);
     }
-
-    function isLogoCard(card) {
-        return !!card.signature_info?.logo;
-    }
+    function isLogoCard(card) { return !!card.signature_info?.logo; }
 
     // --- CASCADING FILTER LOGIC ---
     function getAvailableFilterOptions(cards) {
@@ -152,7 +142,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let cards = cardDatabase.filter(card => {
             const isPlayableCard = card.card_type !== 'Wrestler' && card.card_type !== 'Manager';
             if (!isPlayableCard) return false;
-            if (isLogoCard(card) && card.signature_info.logo !== wrestlerLogo) return false;
+            // **BUG FIX**: A card is only illegal if it's a logo card for a DIFFERENT wrestler.
+            if (isLogoCard(card) && (!selectedWrestler || card.signature_info.logo !== wrestlerLogo)) {
+                return false;
+            }
             const matchesQuery = query === '' || card.title.toLowerCase().includes(query) || card.text_box?.raw_text.toLowerCase().includes(query);
             return matchesQuery;
         });
@@ -166,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderCardPool() {
         searchResults.innerHTML = '';
+        searchResults.className = `card-list ${currentViewMode}-view`;
         const filteredCards = getFilteredCardPool();
         if (filteredCards.length === 0) {
             searchResults.innerHTML = '<p>No cards match the current filters.</p>';
@@ -173,8 +167,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         filteredCards.forEach(card => {
             const cardElement = document.createElement('div');
-            cardElement.className = 'card-item';
-            cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C: ${card.cost})</span><button data-id="${card.id}">Add</button>`;
+            cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
+            cardElement.dataset.id = card.id;
+
+            if (currentViewMode === 'list') {
+                cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C: ${card.cost})</span>`;
+                if (card.cost === 0) {
+                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="starting">To Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
+                } else {
+                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">Add</button></div>`;
+                }
+            } else { // Grid View
+                cardElement.innerHTML = `<div class="card-title" data-id="${card.id}">${card.title}</div>`;
+                if (card.cost === 0) {
+                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button></div>`;
+                } else {
+                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">Add</button></div>`;
+                }
+            }
             searchResults.appendChild(cardElement);
         });
     }
@@ -202,36 +212,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generateCardHTML(card) {
-        // **UPDATED IMAGE PATH LOGIC**
         const imageName = toPascalCase(card.title);
         const imagePath = `card-images/${imageName}.png`;
-        
         const placeholderHTML = `
             <div class="placeholder-card">
-                <div class="placeholder-header">
-                    <span>${card.title}</span>
-                    <span>C: ${card.cost ?? 'N/A'}</span>
-                </div>
-                <div class="placeholder-art-area">
-                    <span>Art Missing</span>
-                </div>
-                <div class="placeholder-type-line">
-                    <span>${card.card_type}</span>
-                </div>
-                <div class="placeholder-text-box">
-                    ${card.text_box.raw_text || ''}
-                </div>
-                <div class="placeholder-stats">
-                    <span>D: ${card.damage ?? 'N/A'}</span>
-                    <span>M: ${card.momentum ?? 'N/A'}</span>
-                </div>
+                <div class="placeholder-header"><span>${card.title}</span><span>C: ${card.cost ?? 'N/A'}</span></div>
+                <div class="placeholder-art-area"><span>Art Missing</span></div>
+                <div class="placeholder-type-line"><span>${card.card_type}</span></div>
+                <div class="placeholder-text-box">${card.text_box.raw_text || ''}</div>
+                <div class="placeholder-stats"><span>D: ${card.damage ?? 'N/A'}</span><span>M: ${card.momentum ?? 'N/A'}</span></div>
             </div>`;
-
         return `
             <img src="${imagePath}" alt="${card.title}" style="width: 100%; border-radius: 8px; display: block;" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div style="display: none;">${placeholderHTML}</div>
-        `;
+            <div style="display: none;">${placeholderHTML}</div>`;
     }
 
     function showCardModal(cardId) {
@@ -267,11 +261,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- DECK CONSTRUCTION LOGIC ---
-    function addCardToDeck(cardId) {
+    function addCardToDeck(cardId, targetDeck) {
         const card = cardDatabase.find(c => c.id === cardId);
         if (!card) return;
         if (isLogoCard(card)) {
-            alert(`"${card.title}" is a Logo card and cannot be added to your deck. It starts in your Market.`);
+            alert(`"${card.title}" is a Logo card and cannot be added to your deck.`);
             return;
         }
         const totalCount = (startingDeck.filter(c => c.id === cardId).length) + (purchaseDeck.filter(c => c.id === cardId).length);
@@ -279,12 +273,12 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`Rule Violation: Max 3 copies of "${card.title}" allowed in total.`);
             return;
         }
-        if (currentBuildMode === 'starting') {
+        if (targetDeck === 'starting') {
             if (card.cost !== 0) { alert(`Rule Violation: Only 0-cost cards allowed in Starting Deck.`); return; }
             if (startingDeck.length >= 24) { alert(`Rule Violation: Starting Deck is full (24 cards).`); return; }
             if (startingDeck.filter(c => c.id === cardId).length >= 2) { alert(`Rule Violation: Max 2 copies of "${card.title}" allowed in Starting Deck.`); return; }
             startingDeck.push(card);
-        } else {
+        } else { // purchase
             purchaseDeck.push(card);
         }
         renderDecks();
@@ -299,18 +293,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function isDeckValid() {
-        return selectedWrestler && selectedManager && startingDeck.length === 24 && purchaseDeck.length >= 36;
-    }
+    function isDeckValid() { return selectedWrestler && selectedManager && startingDeck.length === 24 && purchaseDeck.length >= 36; }
 
     function exportDeck() {
         if (!isDeckValid()) {
             alert("Deck is not valid. Check wrestler/manager selection and deck counts.");
             return;
         }
-        const signatureCardTitles = cardDatabase
-            .filter(c => isSignatureFor(c, selectedWrestler))
-            .map(c => c.title);
+        const signatureCardTitles = cardDatabase.filter(c => isSignatureFor(c, selectedWrestler)).map(c => c.title);
         const deckObject = {
             wrestler: selectedWrestler.title,
             manager: selectedManager.title,
@@ -329,20 +319,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EVENT LISTENERS ---
     function addEventListeners() {
         searchInput.addEventListener('input', renderCardPool);
-        [searchResults, startingDeckList, purchaseDeckList, personaDisplay].forEach(container => {
+
+        searchResults.addEventListener('click', (e) => {
+            const target = e.target;
+            const cardId = target.dataset.id;
+            if (target.tagName === 'BUTTON' && cardId) {
+                addCardToDeck(cardId, target.dataset.deckTarget);
+            } else {
+                const cardTitleSpan = target.closest('[data-id]');
+                if (cardTitleSpan) {
+                    showCardModal(cardTitleSpan.dataset.id);
+                }
+            }
+        });
+
+        [startingDeckList, purchaseDeckList, personaDisplay].forEach(container => {
             container.addEventListener('click', (e) => {
                 const target = e.target;
                 if ((target.tagName === 'SPAN' && target.dataset.id) || target.classList.contains('persona-card-item')) {
                     showCardModal(target.dataset.id);
-                } else if (target.tagName === 'BUTTON' && target.dataset.id) {
-                    if (target.dataset.deck) {
-                        removeCardFromDeck(target.dataset.id, target.dataset.deck);
-                    } else {
-                        addCardToDeck(target.dataset.id);
-                    }
+                } else if (target.tagName === 'BUTTON' && target.dataset.id && target.dataset.deck) {
+                    removeCardFromDeck(target.dataset.id, target.dataset.deck);
                 }
             });
         });
+
         clearDeckBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to clear both decks?')) {
                 startingDeck = [];
@@ -350,21 +351,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderDecks();
             }
         });
+
         saveDeckBtn.addEventListener('click', exportDeck);
+
         wrestlerSelect.addEventListener('change', (e) => {
             selectedWrestler = cardDatabase.find(c => c.id === e.target.value);
             renderCardPool();
             renderPersonaDisplay();
             renderCascadingFilters();
         });
+
         managerSelect.addEventListener('change', (e) => {
             selectedManager = cardDatabase.find(c => c.id === e.target.value);
             renderPersonaDisplay();
         });
-        buildModeToggle.addEventListener('click', () => {
-            currentBuildMode = currentBuildMode === 'starting' ? 'purchase' : 'starting';
-            currentModeSpan.textContent = currentBuildMode === 'starting' ? 'Starting Deck' : 'Purchase Deck';
+
+        viewToggleBtn.addEventListener('click', () => {
+            currentViewMode = currentViewMode === 'list' ? 'grid' : 'list';
+            viewToggleBtn.textContent = currentViewMode === 'list' ? 'Switch to Card View' : 'Switch to List View';
+            renderCardPool();
         });
+
         modalCloseButton.addEventListener('click', () => cardModal.style.display = 'none');
         cardModal.addEventListener('click', (e) => {
             if (e.target === cardModal) cardModal.style.display = 'none';

@@ -46,6 +46,28 @@ header {
     flex-direction: column;
 }
 
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.panel-header h2 {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+#viewToggleBtn {
+    padding: 8px 12px;
+    border: 1px solid var(--secondary-color);
+    background-color: transparent;
+    color: var(--secondary-color);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
 h2 {
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 10px;
@@ -67,30 +89,8 @@ h2 {
     border-radius: 4px;
 }
 
-#cascadingFiltersContainer {
-    display: flex;
-    gap: 10px;
-}
-
-#cascadingFiltersContainer select {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background-color: var(--panel-bg);
-}
-
-#buildModeToggle {
-    padding: 10px 15px;
-    border: 1px solid var(--primary-color);
-    background-color: #e7f3ff;
-    color: var(--primary-color);
-    border-radius: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-    margin-bottom: 15px;
-    width: 100%;
-}
+#cascadingFiltersContainer { display: flex; gap: 10px; }
+#cascadingFiltersContainer select { flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--panel-bg); }
 
 .card-list {
     flex-grow: 1;
@@ -100,197 +100,47 @@ h2 {
     padding: 10px;
 }
 
-.deck-list-small {
-    height: 120px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    padding: 10px;
-    margin-bottom: 15px;
-}
+/* --- View Mode Styles --- */
+.card-list.list-view .card-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #f0f0f0; }
+.card-list.list-view .card-item:last-child { border-bottom: none; }
+.card-list.list-view .card-item span { cursor: pointer; }
+.card-list.list-view .card-buttons { display: flex; gap: 5px; }
 
-.card-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px;
-    border-bottom: 1px solid #f0f0f0;
-}
+.card-list.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; align-content: start; }
+.grid-view .grid-card-item { border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.grid-view .grid-card-item .card-title { font-weight: bold; font-size: 0.9em; margin-bottom: 5px; cursor: pointer; flex-grow: 1; }
+.grid-view .grid-card-item .card-buttons { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; width: 100%; }
+.grid-view .grid-card-item button { width: 100%; padding: 6px; font-size: 0.8em; }
 
-.card-item span {
-    cursor: pointer;
-}
+.card-item button, .grid-card-item button { background-color: var(--success-color); color: white; border: none; border-radius: 4px; cursor: pointer; }
+.card-item button.btn-purchase, .grid-card-item button.btn-purchase { background-color: var(--primary-color); }
 
-.card-item button {
-    background-color: var(--success-color);
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8em;
-}
-
-.deck-panel .card-item button {
-    background-color: var(--danger-color);
-}
-
-.persona-selection select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-}
-
-.deck-actions {
-    margin-top: auto;
-    padding-top: 20px;
-    text-align: right;
-}
-
-.deck-actions button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 10px;
-}
-
+.deck-panel .card-item button { background-color: var(--danger-color); }
+.persona-selection select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 4px; }
+.deck-list-small { height: 120px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; margin-bottom: 15px; }
+.deck-actions { margin-top: auto; padding-top: 20px; text-align: right; }
+.deck-actions button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
 #saveDeck { background-color: var(--primary-color); color: white; }
 #clearDeck { background-color: var(--secondary-color); color: white; }
 
-/* New Persona Display Styles */
-.persona-display-container {
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 10px;
-    margin-bottom: 15px;
-    display: none; /* Hidden by default */
-}
-.persona-display-container h3 {
-    margin-top: 0;
-    font-size: 1.1em;
-}
-.persona-card-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-.persona-card-item {
-    background-color: #f8f9fa;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 5px 10px;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-.persona-card-item:hover {
-    background-color: #e9ecef;
-}
+.persona-display-container { border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; margin-bottom: 15px; display: none; }
+.persona-display-container h3 { margin-top: 0; font-size: 1.1em; }
+.persona-card-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.persona-card-item { background-color: #f8f9fa; border: 1px solid var(--border-color); border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.9em; }
+.persona-card-item:hover { background-color: #e9ecef; }
 
-/* New Modal Styles */
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-.modal-content {
-    background-color: var(--panel-bg);
-    padding: 20px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    position: relative;
-}
-.modal-close-button {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    cursor: pointer;
-}
+.modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background-color: var(--panel-bg); padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
+.modal-close-button { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; font-weight: bold; cursor: pointer; }
 #modalCardContent h3 { margin-top: 0; }
 #modalCardContent p { margin: 5px 0; }
-#modalCardContent .card-text {
-    background-color: #f8f9fa;
-    border: 1px solid var(--border-color);
-    padding: 10px;
-    border-radius: 4px;
-    margin-top: 10px;
-    white-space: pre-wrap; /* Preserves line breaks from raw_text */
-}
-/* --- ADD THESE NEW STYLES FOR CARD PLACEHOLDERS --- */
+#modalCardContent .card-text { background-color: #f8f9fa; border: 1px solid var(--border-color); padding: 10px; border-radius: 4px; margin-top: 10px; white-space: pre-wrap; }
 
-.placeholder-card {
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    width: 100%;
-    aspect-ratio: 63 / 88; /* Standard card aspect ratio */
-    padding: 15px;
-    background-color: #fdfdfd;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box; /* Important for padding */
-    color: #333;
-    margin-bottom: 15px;
-}
-
-.placeholder-header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    font-size: 1.1em;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-    margin-bottom: 10px;
-}
-
-.placeholder-art-area {
-    flex-grow: 1;
-    background-color: #e9ecef;
-    border-radius: 5px;
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6c757d;
-    font-style: italic;
-}
-
-.placeholder-type-line {
-    font-style: italic;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    padding: 5px 0;
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-.placeholder-text-box {
-    font-size: 0.9em;
-    flex-grow: 2;
-    overflow-y: auto;
-    padding: 5px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-    white-space: pre-wrap;
-    margin-bottom: 10px;
-}
-
-.placeholder-stats {
-    display: flex;
-    justify-content: space-around;
-    font-weight: bold;
-    border-top: 1px solid #eee;
-    padding-top: 5px;
-}
+/* Placeholder Card Styles */
+.placeholder-card { border: 1px solid #ccc; border-radius: 10px; width: 100%; aspect-ratio: 63 / 88; padding: 15px; background-color: #fdfdfd; display: flex; flex-direction: column; box-sizing: border-box; color: #333; margin-bottom: 15px; }
+.placeholder-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+.placeholder-art-area { flex-grow: 1; background-color: #e9ecef; border-radius: 5px; margin: 10px 0; display: flex; align-items: center; justify-content: center; color: #6c757d; font-style: italic; }
+.placeholder-type-line { font-style: italic; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 5px 0; text-align: center; margin-bottom: 10px; }
+.placeholder-text-box { font-size: 0.9em; flex-grow: 2; overflow-y: auto; padding: 5px; background-color: #f8f9fa; border-radius: 4px; white-space: pre-wrap; margin-bottom: 10px; }
+.placeholder-stats { display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #eee; padding-top: 5px; }
 
