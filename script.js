@@ -239,8 +239,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 cardElement.appendChild(buttonsDiv);
             } else { // Grid View
-                const visualHTML = generateCardVisualHTML(card);
-                cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
+                // FIXED: Use simpler content for grid view
+                cardElement.innerHTML = `
+                    <div class="card-title" data-id="${card.id}">${card.title}</div>
+                    <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
+                `;
                 const buttonsDiv = document.createElement('div');
                 buttonsDiv.className = 'card-buttons';
                 if (card.cost === 0) {
@@ -437,8 +440,9 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCardPool();
         });
 
+        // FIXED: Remove duplicate event listener
         modalCloseButton.addEventListener('click', () => cardModal.style.display = 'none');
-        modalCloseButton.addEventListener('click', (e) => {
+        cardModal.addEventListener('click', (e) => {
             if (e.target === cardModal) cardModal.style.display = 'none';
         });
     }
@@ -446,4 +450,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- START THE APP ---
     loadCardDatabase();
 });
-
