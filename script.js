@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DATA FETCHING ---
     async function loadCardDatabase() {
         try {
-            const response = await fetch(`./cardDatabase.json?v=${new Date().getTime()}`);
+            const response = await fetch(`./cardDatabase.json`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             cardDatabase = await response.json();
             initializeApp();
