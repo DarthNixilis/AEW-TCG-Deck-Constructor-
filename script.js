@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DATA FETCHING ---
     async function loadCardDatabase() {
         try {
+            // Using the full, raw URL to the JSON file.
             const response = await fetch('https://raw.githubusercontent.com/DarthNixilis/AEW-TCG-Deck-Constructor-/main/cardDatabase.json');
+            
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             cardDatabase = await response.json();
             initializeApp();
@@ -142,11 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isPlayableCard = card.card_type !== 'Wrestler' && card.card_type !== 'Manager';
             if (!isPlayableCard) return false;
             
-            // **THE BUG FIX IS HERE**
-            // This logic is now safe and handles the initial `null` state correctly.
             if (isLogoCard(card)) {
-                // If a wrestler is selected, only show their logo cards.
-                // If no wrestler is selected, show no logo cards.
                 return selectedWrestler ? card.signature_info.logo === selectedWrestler.signature_info.logo : false;
             }
             
