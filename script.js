@@ -47,34 +47,37 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListeners();
     }
 
-    // **THIS IS THE ONLY MAJOR CHANGE FROM THE LAST WORKING VERSION**
-    // This function is now "bulletproof" to ensure all personas are loaded.
+    // **NEW DEBUGGING VERSION**
     function populatePersonaSelectors() {
+        console.log("--- Populating Personas ---");
+        console.log("Total cards in database:", cardDatabase.length);
+
         wrestlerSelect.length = 1;
         managerSelect.length = 1;
 
         const wrestlers = [];
         const managers = [];
 
-        // Safely loop through the database, checking every entry.
         if (Array.isArray(cardDatabase)) {
             for (const card of cardDatabase) {
-                // This check prevents errors if an entry is null or not an object.
                 if (card && typeof card === 'object') {
                     if (card.card_type === 'Wrestler' && card.id && card.title) {
+                        console.log("Found wrestler:", card.title, `(ID: ${card.id})`);
                         wrestlers.push(card);
                     } else if (card.card_type === 'Manager' && card.id && card.title) {
+                        console.log("Found manager:", card.title, `(ID: ${card.id})`);
                         managers.push(card);
                     }
                 }
             }
         }
 
-        // Sort the valid personas alphabetically.
+        console.log("Total wrestlers found:", wrestlers.length);
+        console.log("Total managers found:", managers.length);
+
         wrestlers.sort((a, b) => a.title.localeCompare(b.title));
         managers.sort((a, b) => a.title.localeCompare(b.title));
 
-        // Populate the dropdowns.
         wrestlers.forEach(w => {
             const option = document.createElement('option');
             option.value = w.id;
@@ -88,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = m.title;
             managerSelect.appendChild(option);
         });
+        console.log("--- Finished Populating Personas ---");
     }
 
     // --- CORE GAME LOGIC & HELPERS ---
@@ -95,13 +99,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!str) return '';
         return str.replace(/[^a-zA-Z0-9]+(.)?/g, (match, chr) => chr ? chr.toUpperCase() : '').replace(/^./, (match) => match.toUpperCase());
     }
+
+    // **NEW ACCURATE VERSION**
     function isSignatureFor(card, wrestler) {
         if (!wrestler || !card) return false;
-        if (card.signature_info?.logo && card.signature_info.logo === wrestler.signature_info?.logo) return true;
+        
+        // Check logo match
+        if (card.signature_info?.logo && card.signature_info.logo === wrestler.signature_info?.logo) 
+            return true;
+        
+        // Check linked_persona match
+        if (card.signature_info?.linked_persona && wrestler.title && 
+            card.signature_info.linked_persona === wrestler.title) 
+            return true;
+        
+        // Check text reference as fallback
         const wrestlerFirstName = wrestler.title.split(' ')[0];
         const rawText = card.text_box?.raw_text || '';
         return rawText.includes(wrestler.title) || rawText.includes(wrestlerFirstName);
     }
+
     function isLogoCard(card) { return !!card.signature_info?.logo; }
 
     // --- CASCADING FILTER LOGIC ---
@@ -181,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function getFilteredCardPool(ignoreCascadingFilters = false) {
         const query = searchInput.value.toLowerCase();
         let cards = cardDatabase.filter(card => {
-            if (!card) return false; // Safeguard against null entries
+            if (!card) return false; 
             const isPlayableCard = card.card_type !== 'Wrestler' && card.card_type !== 'Manager';
             if (!isPlayableCard) return false;
             if (isLogoCard(card)) {
@@ -222,10 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 cardElement.appendChild(buttonsDiv);
             } else { // Grid View
-                cardElement.innerHTML = `
-                    <div class="card-title" data-id="${card.id}">${card.title}</div>
-                    <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
-                `;
+                const visualHTML = generateCardVisualHTML(card);
+                cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
                 const buttonsDiv = document.createElement('div');
                 buttonsDiv.className = 'card-buttons';
                 if (card.cost === 0) {

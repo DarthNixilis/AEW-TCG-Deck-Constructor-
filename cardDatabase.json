@@ -2749,4 +2749,74 @@
     "persona_details": null,
     "signature_info": null
   }
+{
+  "id": "AEW-S01-XXX", // Use appropriate ID
+  "title": "Marina Shafir",
+  "version": "1.0",
+  "card_type": "Manager",
+  "sub_type": null,
+  "cost": null,
+  "damage": null,
+  "momentum": 3,
+  "text_box": {
+    "raw_text": "Ready Action - Commit: Draw a card, then discard a card.",
+    "keywords": [],
+    "traits": [],
+    "abilities": [
+      {
+        "trigger": "Ready Action",
+        "effect": "Commit: Draw a card, then discard a card."
+      }
+    ]
+  },
+  "persona_details": {
+    "hold": null,
+    "is_manager": true
+  },
+  "signature_info": {
+    "linked_persona": "Marina Shafir",
+    "logo": null
+  }
+},
+{
+  "id": "AEW-S01-XXX", // Use appropriate ID
+  "title": "Paradigm Shift",
+  "version": "1.0",
+  "card_type": "Grapple", // Or whatever type it should be
+  "sub_type": null,
+  "cost": 15, // Adjust as needed
+  "damage": 12, // Adjust as needed
+  "momentum": 10, // Adjust as needed
+  "text_box": {
+    "raw_text": "Finisher. Play - Stun opponent. Jon Moxley - This cannot be reversed if opponent's Stamina is 15 or less.",
+    "keywords": [
+      {
+        "name": "Finisher",
+        "description": "A powerful Maneuver that requires an opponent to pay an extra cost to reverse it."
+      }
+    ],
+    "traits": [
+      {
+        "name": "Target",
+        "value": "H"
+      }
+    ],
+    "abilities": [
+      {
+        "trigger": "Play",
+        "effect": "Stun opponent."
+      },
+      {
+        "trigger": "Play",
+        "effect": "This cannot be reversed if opponent's Stamina is 15 or less.",
+        "condition": "If your Wrestler is Jon Moxley"
+      }
+    ]
+  },
+  "persona_details": null,
+  "signature_info": {
+    "linked_persona": "Jon Moxley",
+    "logo": "Jon Moxley"
+  }
+}
 ]
