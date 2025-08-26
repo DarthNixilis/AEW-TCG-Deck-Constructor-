@@ -36,6 +36,27 @@ document.addEventListener('DOMContentLoaded', () => {
             searchResults.innerHTML = `<p style="color: red;"><strong>Error:</strong> ${error.message}</p>`;
         }
     }
+function populatePersonaSelectors() {
+    wrestlerSelect.length = 1; // Clear previous options but keep the placeholder
+    managerSelect.length = 1;  // Clear previous options but keep the placeholder
+
+    const wrestlers = cardDatabase.filter(c => c && c.card_type === 'Wrestler').sort((a, b) => a.title.localeCompare(b.title));
+    const managers = cardDatabase.filter(c => c && c.card_type === 'Manager').sort((a, b) => a.title.localeCompare(b.title));
+
+    wrestlers.forEach(w => {
+        const option = document.createElement('option');
+        option.value = w.id;
+        option.textContent = w.title;
+        wrestlerSelect.appendChild(option);
+    });
+
+    managers.forEach(m => {
+        const option = document.createElement('option');
+        option.value = m.id;
+        option.textContent = m.title;
+        managerSelect.appendChild(option);
+    });
+}
 
     // --- INITIALIZATION ---
     function initializeApp() {
