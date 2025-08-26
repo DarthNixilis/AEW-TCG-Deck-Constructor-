@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM ELEMENT REFERENCES ---
     const searchInput = document.getElementById('searchInput');
     const cascadingFiltersContainer = document.getElementById('cascadingFiltersContainer');
     const searchResults = document.getElementById('searchResults');
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalCloseButton = document.querySelector('.modal-close-button');
     const viewModeToggle = document.getElementById('viewModeToggle');
 
+    // --- STATE MANAGEMENT ---
     let cardDatabase = [];
     let startingDeck = [];
     let purchaseDeck = [];
@@ -24,18 +26,43 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeFilters = [{}, {}, {}];
     let currentViewMode = 'list';
 
+    // --- UTILITY FUNCTIONS ---
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // --- DATA FETCHING ---
     async function loadCardDatabase() {
         try {
-            const response = await fetch(`./cardDatabase.json`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const response = await fetch(`./cardDatabase.json?v=${new Date().getTime()}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Card database file not found. Please ensure cardDatabase.json exists in the correct location.');
+                } else {
+                    throw new Error(`Server returned ${response.status} error.`);
+                }
+            }
             cardDatabase = await response.json();
             initializeApp();
         } catch (error) {
             console.error("Could not load card database:", error);
-            searchResults.innerHTML = `<p style="color: red;">Error: Could not load cardDatabase.json. Please ensure the file exists.</p>`;
+            searchResults.innerHTML = `
+                <p style="color: red;">
+                    <strong>Error:</strong> ${error.message}<br>
+                    Please check the developer console (F12) for more details.
+                </p>`;
         }
     }
 
+    // --- INITIALIZATION ---
     function initializeApp() {
         populatePersonaSelectors();
         renderCascadingFilters();
@@ -46,43 +73,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function populatePersonaSelectors() {
         wrestlerSelect.length = 1;
         managerSelect.length = 1;
-
-        const wrestlers = [];
-        const managers = [];
-
-        if (Array.isArray(cardDatabase)) {
-            for (const card of cardDatabase) {
-                if (card && typeof card === 'object') {
-                    if (card.card_type === 'Wrestler' && card.id && card.title) {
-                        wrestlers.push(card);
-                    } else if (card.card_type === 'Manager' && card.id && card.title) {
-                        managers.push(card);
-                    }
-                }
-            }
-        }
-
-        wrestlers.sort((a, b) => a.title.localeCompare(b.title));
-        managers.sort((a, b) => a.title.localeCompare(b.title));
-
-        wrestlers.forEach(w => {
-            const option = document.createElement('option');
-            option.value = w.id;
-            option.textContent = w.title;
-            wrestlerSelect.appendChild(option);
-        });
-
-        managers.forEach(m => {
-            const option = document.createElement('option');
-            option.value = m.id;
-            option.textContent = m.title;
-            managerSelect.appendChild(option);
-        });
+        const wrestlers = cardDatabase.filter(c => c && c.card_type === 'Wrestler').sort((a, b) => a.title.localeCompare(b.title));
+        const managers = cardDatabase.filter(c => c && c.card_type === 'Manager').sort((a, b) => a.title.localeCompare(b.title));
+        wrestlers.forEach(w => wrestlerSelect.add(new Option(w.title, w.id)));
+        managers.forEach(m => managerSelect.add(new Option(m.title, m.id)));
     }
 
+    // --- CORE GAME LOGIC & HELPERS ---
     function toPascalCase(str) {
         if (!str) return '';
-        return str.replace(/[^a-zA-Z0-9]+(.)?/g, (match, chr) => chr ? chr.toUpperCase() : '').replace(/^./, (match) => match.toUpperCase());
+        return str
+            .replace(/[^a-zA-Z0-9\s]+/g, '')
+            .split(/\s+/)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join('');
     }
 
     function isSignatureFor(card, wrestler) {
@@ -96,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function isLogoCard(card) { return !!card.signature_info?.logo; }
 
+    // --- FILTER LOGIC ---
     function getAvailableFilterOptions(cards) {
         const options = { 'Card Type': new Set(), 'Keyword': new Set(), 'Trait': new Set() };
         cards.forEach(card => {
@@ -162,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- RENDERING & CARD POOL LOGIC ---
     function getFilteredCardPool(ignoreCascadingFilters = false) {
         const query = searchInput.value.toLowerCase();
         let cards = cardDatabase.filter(card => {
@@ -200,12 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 cardElement.appendChild(buttonsDiv);
             } else {
-                cardElement.innerHTML = `
-                    <div class="card-visual" data-id="${card.id}">
-                        <div class="card-title">${card.title}</div>
-                        <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
-                    </div>
-                `;
+                const visualHTML = generateCardVisualHTML(card);
+                cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
                 const buttonsDiv = document.createElement('div');
                 buttonsDiv.className = 'card-buttons';
                 if (card.cost === 0) {
@@ -222,13 +224,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateCardVisualHTML(card) {
         const imageName = toPascalCase(card.title);
         const imagePath = `card-images/${imageName}.png`;
+        // **BUG FIX IS HERE**: Added the missing closing quote on the first span
         const placeholderHTML = `
             <div class="placeholder-card">
                 <div class="placeholder-header"><span>${card.title}</span><span>C: ${card.cost ?? 'N/A'}</span></div>
                 <div class="placeholder-art-area"><span>Art Missing</span></div>
                 <div class="placeholder-type-line"><span>${card.card_type}</span></div>
                 <div class="placeholder-text-box">${card.text_box?.raw_text || ''}</div>
-                <div class="placeholder-stats"><span>D: ${card.damage ?? 'N/A'</span><span>M: ${card.momentum ?? 'N/A'}</span></div>
+                <div class="placeholder-stats"><span>D: ${card.damage ?? 'N/A'}</span><span>M: ${card.momentum ?? 'N/A'}</span></div>
             </div>`;
         return `
             <img src="${imagePath}" alt="${card.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -262,6 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!card) return;
         modalCardContent.innerHTML = generateCardVisualHTML(card);
         cardModal.style.display = 'flex';
+        cardModal.setAttribute('role', 'dialog');
+        cardModal.setAttribute('aria-modal', 'true');
+        modalCloseButton.focus();
     }
 
     function renderDecks() {
@@ -290,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         purchaseDeckCount.parentElement.style.color = purchaseDeck.length >= 36 ? 'green' : 'red';
     }
 
+    // --- DECK CONSTRUCTION LOGIC ---
     function addCardToDeck(cardId, targetDeck) {
         const card = cardDatabase.find(c => c.id === cardId);
         if (!card) return;
@@ -322,11 +329,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function isDeckValid() { return selectedWrestler && selectedManager && startingDeck.length === 24 && purchaseDeck.length >= 36; }
+    function validateDeck() {
+        const issues = [];
+        if (!selectedWrestler) issues.push("No wrestler selected");
+        if (!selectedManager) issues.push("No manager selected");
+        if (startingDeck.length !== 24) issues.push(`Starting deck has ${startingDeck.length} cards (needs 24)`);
+        if (purchaseDeck.length < 36) issues.push(`Purchase deck has ${purchaseDeck.length} cards (needs at least 36)`);
+        const allCards = [...startingDeck, ...purchaseDeck];
+        const cardCounts = allCards.reduce((acc, card) => { acc[card.id] = (acc[card.id] || 0) + 1; return acc; }, {});
+        Object.entries(cardCounts).forEach(([cardId, count]) => {
+            if (count > 3) {
+                const card = cardDatabase.find(c => c.id === cardId);
+                issues.push(`Too many copies of ${card.title} (${count} copies, max 3)`);
+            }
+        });
+        return issues;
+    }
 
     function exportDeck() {
-        if (!isDeckValid()) {
-            alert("Deck is not valid. Check wrestler/manager selection and deck counts.");
+        const validationIssues = validateDeck();
+        if (validationIssues.length > 0) {
+            alert("Deck validation failed:\n\n" + validationIssues.join("\n"));
             return;
         }
         const signatureCardTitles = cardDatabase.filter(c => isSignatureFor(c, selectedWrestler)).map(c => c.title);
@@ -345,8 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(a.href);
     }
 
+    // --- EVENT LISTENERS ---
     function addEventListeners() {
-        searchInput.addEventListener('input', renderCardPool);
+        searchInput.addEventListener('input', debounce(renderCardPool, 300));
 
         searchResults.addEventListener('click', (e) => {
             const target = e.target;
@@ -402,7 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
         cardModal.addEventListener('click', (e) => {
             if (e.target === cardModal) cardModal.style.display = 'none';
         });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && cardModal.style.display === 'flex') {
+                cardModal.style.display = 'none';
+            }
+        });
     }
 
     loadCardDatabase();
 });
+
