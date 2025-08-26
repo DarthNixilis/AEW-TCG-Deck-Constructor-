@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEW TCG Deck Constructor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>AEW TCG Deck Constructor</h1>
+    </header>
+
+    <main class="container">
+        <!-- Left Panel: Card Pool & Filters -->
+        <div class="search-panel">
+            <h2>Card Pool</h2>
+            <div class="filter-controls">
+                <input type="text" id="searchInput" placeholder="Search card name or text...">
+                <div id="cascadingFiltersContainer">
+                    <!-- Filter dropdowns will be dynamically created here by JS -->
+                </div>
+            </div>
+            <div id="searchResults" class="card-list"></div>
+        </div>
+
+        <!-- Right Panel: Persona, Decks, & Actions -->
+        <div class="deck-panel">
+            <div class="persona-selection">
+                <h2>Persona</h2>
+                <select id="wrestlerSelect">
+                    <option value="">-- Select Wrestler --</option>
+                </select>
+                <select id="managerSelect">
+                    <option value="">-- Select Manager --</option>
+                </select>
+            </div>
+
+            <!-- NEW: Persona & Signature Card Display Area -->
+            <div id="personaDisplay" class="persona-display-container"></div>
+
+            <button id="buildModeToggle">Building: <span id="currentMode">Starting Deck</span></button>
+
+            <h2>Starting Deck (<span id="startingDeckCount">0</span>/24)</h2>
+            <div id="startingDeckList" class="deck-list-small"></div>
+
+            <h2>Purchase Deck (<span id="purchaseDeckCount">0</span>/36+)</h2>
+            <div id="purchaseDeckList" class="deck-list-small"></div>
+
+            <div class="deck-actions">
+                <button id="saveDeck">Export Deck</button>
+                <button id="clearDeck">Clear Decks</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- NEW: Modal for displaying card details -->
+    <div id="cardModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close-button">&times;</span>
+            <div id="modalCardContent"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+
+</html>
