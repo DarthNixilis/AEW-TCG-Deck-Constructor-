@@ -15,8 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardModal = document.getElementById('cardModal');
     const modalCardContent = document.getElementById('modalCardContent');
     const modalCloseButton = document.querySelector('.modal-close-button');
-    // **BUG FIX #1: Corrected the ID to match the HTML.**
-    const viewModeToggle = document.getElementById('viewModeToggle'); 
+    const viewModeToggle = document.getElementById('viewModeToggle');
 
     // --- STATE MANAGEMENT ---
     let cardDatabase = [];
@@ -30,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DATA FETCHING ---
     async function loadCardDatabase() {
         try {
-            // Using the correct relative path.
             const response = await fetch('./cardDatabase.json');
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             cardDatabase = await response.json();
@@ -174,19 +172,27 @@ document.addEventListener('DOMContentLoaded', () => {
             cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
             cardElement.dataset.id = card.id;
 
+            // **THE FIX IS HERE: Updated the innerHTML to include C/D/M stats.**
             if (currentViewMode === 'list') {
-                cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C: ${card.cost})</span>`;
+                // Display C/D/M in list view
+                cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
                 if (card.cost === 0) {
                     cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="starting">To Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
                 } else {
-                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">Add</button></div>`;
+                    // Use "To Purchase" for clarity
+                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
                 }
             } else { // Grid View
-                cardElement.innerHTML = `<div class="card-title" data-id="${card.id}">${card.title}</div>`;
+                // Display C/D/M in grid view
+                cardElement.innerHTML = `
+                    <div class="card-title" data-id="${card.id}">${card.title}</div>
+                    <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
+                `;
                 if (card.cost === 0) {
                     cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button></div>`;
                 } else {
-                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">Add</button></div>`;
+                    // Use "To Purchase" for clarity
+                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
                 }
             }
             searchResults.appendChild(cardElement);
@@ -250,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cardCounts = deck.reduce((acc, card) => { acc[card.id] = (acc[card.id] || 0) + 1; return acc; }, {});
         Object.entries(cardCounts).forEach(([cardId, count]) => {
             const card = cardDatabase.find(c => c.id === cardId);
-            if (!card) return; // Safeguard
+            if (!card) return;
             const cardElement = document.createElement('div');
             cardElement.className = 'card-item';
             cardElement.innerHTML = `<span data-id="${card.id}">${count}x ${card.title}</span><button data-id="${card.id}" data-deck="${deckName}">Remove</button>`;
@@ -371,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPersonaDisplay();
         });
 
-        // **BUG FIX #2: Corrected the event listener to use the correct variable.**
         viewModeToggle.addEventListener('click', () => {
             currentViewMode = currentViewMode === 'list' ? 'grid' : 'list';
             viewModeToggle.textContent = currentViewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View';
