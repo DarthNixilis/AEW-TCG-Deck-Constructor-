@@ -29,7 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DATA FETCHING ---
     async function loadCardDatabase() {
         try {
-            const response = await fetch('./cardDatabase.json');
+            // THE ONLY CHANGE IS ON THIS LINE: Removed './'
+            const response = await fetch('cardDatabase.json');
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             cardDatabase = await response.json();
             initializeApp();
@@ -47,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListeners();
     }
 
-    // **NEW DEBUGGING VERSION**
     function populatePersonaSelectors() {
         console.log("--- Populating Personas ---");
         console.log("Total cards in database:", cardDatabase.length);
@@ -100,20 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return str.replace(/[^a-zA-Z0-9]+(.)?/g, (match, chr) => chr ? chr.toUpperCase() : '').replace(/^./, (match) => match.toUpperCase());
     }
 
-    // **NEW ACCURATE VERSION**
     function isSignatureFor(card, wrestler) {
         if (!wrestler || !card) return false;
         
-        // Check logo match
         if (card.signature_info?.logo && card.signature_info.logo === wrestler.signature_info?.logo) 
             return true;
         
-        // Check linked_persona match
         if (card.signature_info?.linked_persona && wrestler.title && 
             card.signature_info.linked_persona === wrestler.title) 
             return true;
         
-        // Check text reference as fallback
         const wrestlerFirstName = wrestler.title.split(' ')[0];
         const rawText = card.text_box?.raw_text || '';
         return rawText.includes(wrestler.title) || rawText.includes(wrestlerFirstName);
@@ -239,11 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 cardElement.appendChild(buttonsDiv);
             } else { // Grid View
-                // FIXED: Use simpler content for grid view
-                cardElement.innerHTML = `
-                    <div class="card-title" data-id="${card.id}">${card.title}</div>
-                    <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
-                `;
+                const visualHTML = generateCardVisualHTML(card);
+                cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
                 const buttonsDiv = document.createElement('div');
                 buttonsDiv.className = 'card-buttons';
                 if (card.cost === 0) {
@@ -440,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCardPool();
         });
 
-        // FIXED: Remove duplicate event listener
         modalCloseButton.addEventListener('click', () => cardModal.style.display = 'none');
         cardModal.addEventListener('click', (e) => {
             if (e.target === cardModal) cardModal.style.display = 'none';
@@ -450,3 +442,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- START THE APP ---
     loadCardDatabase();
 });
+
