@@ -29,8 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DATA FETCHING ---
     async function loadCardDatabase() {
         try {
-            // THE ONLY CHANGE IS ON THIS LINE: Removed './'
-            const response = await fetch('./cardDatabase.json');
+            const response = await fetch(`./cardDatabase.json?v=${new Date().getTime()}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             cardDatabase = await response.json();
             initializeApp();
@@ -62,10 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const card of cardDatabase) {
                 if (card && typeof card === 'object') {
                     if (card.card_type === 'Wrestler' && card.id && card.title) {
-                        console.log("Found wrestler:", card.title, `(ID: ${card.id})`);
                         wrestlers.push(card);
                     } else if (card.card_type === 'Manager' && card.id && card.title) {
-                        console.log("Found manager:", card.title, `(ID: ${card.id})`);
                         managers.push(card);
                     }
                 }
@@ -212,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return cards;
     }
 
+    // **NEW, CORRECTED VERSION**
     function renderCardPool() {
         searchResults.innerHTML = '';
         searchResults.className = `card-list ${currentViewMode}-view`;
@@ -224,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cardElement = document.createElement('div');
             cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
             cardElement.dataset.id = card.id;
+
             if (currentViewMode === 'list') {
                 cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
                 const buttonsDiv = document.createElement('div');
