@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM ELEMENT REFERENCES ---
     const searchInput = document.getElementById('searchInput');
     const cascadingFiltersContainer = document.getElementById('cascadingFiltersContainer');
     const searchResults = document.getElementById('searchResults');
@@ -17,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalCloseButton = document.querySelector('.modal-close-button');
     const viewModeToggle = document.getElementById('viewModeToggle');
 
-    // --- STATE MANAGEMENT ---
     let cardDatabase = [];
     let startingDeck = [];
     let purchaseDeck = [];
@@ -26,10 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeFilters = [{}, {}, {}];
     let currentViewMode = 'list';
 
-    // --- DATA FETCHING ---
     async function loadCardDatabase() {
         try {
-            const response = await fetch(`./cardDatabase.json?v=${new Date().getTime()}`);
+            const response = await fetch(`./cardDatabase.json`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             cardDatabase = await response.json();
             initializeApp();
@@ -39,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- INITIALIZATION ---
     function initializeApp() {
         populatePersonaSelectors();
         renderCascadingFilters();
@@ -48,9 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populatePersonaSelectors() {
-        console.log("--- Populating Personas ---");
-        console.log("Total cards in database:", cardDatabase.length);
-
         wrestlerSelect.length = 1;
         managerSelect.length = 1;
 
@@ -69,9 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        console.log("Total wrestlers found:", wrestlers.length);
-        console.log("Total managers found:", managers.length);
-
         wrestlers.sort((a, b) => a.title.localeCompare(b.title));
         managers.sort((a, b) => a.title.localeCompare(b.title));
 
@@ -88,10 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = m.title;
             managerSelect.appendChild(option);
         });
-        console.log("--- Finished Populating Personas ---");
     }
 
-    // --- CORE GAME LOGIC & HELPERS ---
     function toPascalCase(str) {
         if (!str) return '';
         return str.replace(/[^a-zA-Z0-9]+(.)?/g, (match, chr) => chr ? chr.toUpperCase() : '').replace(/^./, (match) => match.toUpperCase());
@@ -99,14 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function isSignatureFor(card, wrestler) {
         if (!wrestler || !card) return false;
-        
-        if (card.signature_info?.logo && card.signature_info.logo === wrestler.signature_info?.logo) 
-            return true;
-        
-        if (card.signature_info?.linked_persona && wrestler.title && 
-            card.signature_info.linked_persona === wrestler.title) 
-            return true;
-        
+        if (card.signature_info?.logo && card.signature_info.logo === wrestler.signature_info?.logo) return true;
+        if (card.signature_info?.linked_persona && wrestler.title && card.signature_info.linked_persona === wrestler.title) return true;
         const wrestlerFirstName = wrestler.title.split(' ')[0];
         const rawText = card.text_box?.raw_text || '';
         return rawText.includes(wrestler.title) || rawText.includes(wrestlerFirstName);
@@ -114,17 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function isLogoCard(card) { return !!card.signature_info?.logo; }
 
-    // --- CASCADING FILTER LOGIC ---
     function getAvailableFilterOptions(cards) {
         const options = { 'Card Type': new Set(), 'Keyword': new Set(), 'Trait': new Set() };
         cards.forEach(card => {
             if (card && card.card_type) options['Card Type'].add(card.card_type);
-            if (card && card.text_box?.keywords) {
-                card.text_box.keywords.forEach(k => k.name && options['Keyword'].add(k.name));
-            }
-            if (card && card.text_box?.traits) {
-                card.text_box.traits.forEach(t => t.name && options['Trait'].add(t.name));
-            }
+            if (card && card.text_box?.keywords) card.text_box.keywords.forEach(k => k.name && options['Keyword'].add(k.name));
+            if (card && card.text_box?.traits) card.text_box.traits.forEach(t => t.name && options['Trait'].add(t.name));
         });
         return {
             'Card Type': Array.from(options['Card Type']).sort(),
@@ -168,9 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterWrapper.appendChild(valueSelect);
             }
             cascadingFiltersContainer.appendChild(filterWrapper);
-            if (activeFilters[i].value) {
-                 filteredCards = applySingleFilter(filteredCards, activeFilters[i]);
-            }
+            if (activeFilters[i].value) filteredCards = applySingleFilter(filteredCards, activeFilters[i]);
         }
     }
     
@@ -187,71 +162,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- RENDERING & CARD POOL LOGIC ---
     function getFilteredCardPool(ignoreCascadingFilters = false) {
         const query = searchInput.value.toLowerCase();
         let cards = cardDatabase.filter(card => {
             if (!card) return false; 
             const isPlayableCard = card.card_type !== 'Wrestler' && card.card_type !== 'Manager';
             if (!isPlayableCard) return false;
-            if (isLogoCard(card)) {
-                return selectedWrestler ? card.signature_info.logo === selectedWrestler.signature_info.logo : false;
-            }
+            if (isLogoCard(card)) return selectedWrestler ? card.signature_info.logo === selectedWrestler.signature_info.logo : false;
             const rawText = card.text_box?.raw_text || '';
             const matchesQuery = query === '' || (card.title && card.title.toLowerCase().includes(query)) || rawText.toLowerCase().includes(query);
             return matchesQuery;
         });
-        if (!ignoreCascadingFilters) {
-            activeFilters.forEach(filter => {
-                if (filter.value) cards = applySingleFilter(cards, filter);
-            });
-        }
+        if (!ignoreCascadingFilters) activeFilters.forEach(filter => { if (filter.value) cards = applySingleFilter(cards, filter); });
         return cards;
     }
 
-
-// START OF SELECTION (Line 204)
-function renderCardPool() {
-    searchResults.innerHTML = '';
-    searchResults.className = `card-list ${currentViewMode}-view`;
-    const filteredCards = getFilteredCardPool();
-    if (filteredCards.length === 0) {
-        searchResults.innerHTML = '<p>No cards match the current filters.</p>';
-        return;
-    }
-    filteredCards.forEach(card => {
-        const cardElement = document.createElement('div');
-        cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
-        cardElement.dataset.id = card.id;
-        if (currentViewMode === 'list') {
-            cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
-            const buttonsDiv = document.createElement('div');
-            buttonsDiv.className = 'card-buttons';
-            if (card.cost === 0) {
-                buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
-            } else {
-                buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
-            }
-            cardElement.appendChild(buttonsDiv);
-        } else { // Grid View
-            const visualHTML = generateCardVisualHTML(card);
-            cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
-            const buttonsDiv = document.createElement('div');
-            buttonsDiv.className = 'card-buttons';
-            if (card.cost === 0) {
-                buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
-            } else {
-                buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
-            }
-            cardElement.appendChild(buttonsDiv);
+    function renderCardPool() {
+        searchResults.innerHTML = '';
+        searchResults.className = `card-list ${currentViewMode}-view`;
+        const filteredCards = getFilteredCardPool();
+        if (filteredCards.length === 0) {
+            searchResults.innerHTML = '<p>No cards match the current filters.</p>';
+            return;
         }
-        searchResults.appendChild(cardElement);
-    });
-}
-// END OF SELECTION (Line 241)
+        filteredCards.forEach(card => {
+            const cardElement = document.createElement('div');
+            cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
+            cardElement.dataset.id = card.id;
+            if (currentViewMode === 'list') {
+                cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.className = 'card-buttons';
+                if (card.cost === 0) {
+                    buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
+                } else {
+                    buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
+                }
+                cardElement.appendChild(buttonsDiv);
+            } else {
+                cardElement.innerHTML = `
+                    <div class="card-visual" data-id="${card.id}">
+                        <div class="card-title">${card.title}</div>
+                        <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
+                    </div>
+                `;
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.className = 'card-buttons';
+                if (card.cost === 0) {
+                    buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
+                } else {
+                    buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
+                }
+                cardElement.appendChild(buttonsDiv);
+            }
+            searchResults.appendChild(cardElement);
+        });
+    }
 
-
-    
     function generateCardVisualHTML(card) {
         const imageName = toPascalCase(card.title);
         const imagePath = `card-images/${imageName}.png`;
@@ -261,7 +228,7 @@ function renderCardPool() {
                 <div class="placeholder-art-area"><span>Art Missing</span></div>
                 <div class="placeholder-type-line"><span>${card.card_type}</span></div>
                 <div class="placeholder-text-box">${card.text_box?.raw_text || ''}</div>
-                <div class="placeholder-stats"><span>D: ${card.damage ?? 'N/A'}</span><span>M: ${card.momentum ?? 'N/A'}</span></div>
+                <div class="placeholder-stats"><span>D: ${card.damage ?? 'N/A'</span><span>M: ${card.momentum ?? 'N/A'}</span></div>
             </div>`;
         return `
             <img src="${imagePath}" alt="${card.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -323,7 +290,6 @@ function renderCardPool() {
         purchaseDeckCount.parentElement.style.color = purchaseDeck.length >= 36 ? 'green' : 'red';
     }
 
-    // --- DECK CONSTRUCTION LOGIC ---
     function addCardToDeck(cardId, targetDeck) {
         const card = cardDatabase.find(c => c.id === cardId);
         if (!card) return;
@@ -341,7 +307,7 @@ function renderCardPool() {
             if (startingDeck.length >= 24) { alert(`Rule Violation: Starting Deck is full (24 cards).`); return; }
             if (startingDeck.filter(c => c.id === cardId).length >= 2) { alert(`Rule Violation: Max 2 copies of "${card.title}" allowed in Starting Deck.`); return; }
             startingDeck.push(card);
-        } else { // purchase
+        } else {
             purchaseDeck.push(card);
         }
         renderDecks();
@@ -379,7 +345,6 @@ function renderCardPool() {
         URL.revokeObjectURL(a.href);
     }
 
-    // --- EVENT LISTENERS ---
     function addEventListeners() {
         searchInput.addEventListener('input', renderCardPool);
 
@@ -390,9 +355,7 @@ function renderCardPool() {
                 addCardToDeck(cardId, target.dataset.deckTarget);
             } else {
                 const cardVisual = target.closest('[data-id]');
-                if (cardVisual) {
-                    showCardModal(cardVisual.dataset.id);
-                }
+                if (cardVisual) showCardModal(cardVisual.dataset.id);
             }
         });
 
@@ -441,7 +404,5 @@ function renderCardPool() {
         });
     }
 
-    // --- START THE APP ---
     loadCardDatabase();
 });
-
