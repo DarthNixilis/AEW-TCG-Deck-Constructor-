@@ -2750,7 +2750,7 @@
     "signature_info": null
   }
 {
-  "id": "AEW-S01-XXX", // Use appropriate ID
+  "id": "AEW-S01-102",
   "title": "Marina Shafir",
   "version": "1.0",
   "card_type": "Manager",
@@ -2759,13 +2759,13 @@
   "damage": null,
   "momentum": 3,
   "text_box": {
-    "raw_text": "Ready Action - Commit: Draw a card, then discard a card.",
+    "raw_text": "Tie-Up Action - Commit and discard a card: Attempt to play a maneuver from your hand. It gets +1D and \"Play - Draw two cards\".",
     "keywords": [],
     "traits": [],
     "abilities": [
       {
-        "trigger": "Ready Action",
-        "effect": "Commit: Draw a card, then discard a card."
+        "trigger": "Tie-Up Action",
+        "effect": "Commit and discard a card: Attempt to play a maneuver from your hand. It gets +1D and \"Play - Draw two cards\"."
       }
     ]
   },
@@ -2777,22 +2777,26 @@
     "linked_persona": "Marina Shafir",
     "logo": null
   }
-},
+}
 {
-  "id": "AEW-S01-XXX", // Use appropriate ID
+  "id": "AEW-S01-103",
   "title": "Paradigm Shift",
-  "version": "1.0",
-  "card_type": "Grapple", // Or whatever type it should be
+  "version": "0.2",
+  "card_type": "Grapple",
   "sub_type": null,
-  "cost": 15, // Adjust as needed
-  "damage": 12, // Adjust as needed
-  "momentum": 10, // Adjust as needed
+  "cost": 15,
+  "damage": 10,
+  "momentum": 15,
   "text_box": {
-    "raw_text": "Finisher. Play - Stun opponent. Jon Moxley - This cannot be reversed if opponent's Stamina is 15 or less.",
+    "raw_text": "Finisher. *This is Damage +2 for each maneuver in your ring. While you have five or more maneuvers this has Permanent.",
     "keywords": [
       {
         "name": "Finisher",
-        "description": "A powerful Maneuver that requires an opponent to pay an extra cost to reverse it."
+        "description": "To reverse this, you must play a reversal with printed damage greater than or equal to this maneuver's damage."
+      },
+      {
+        "name": "Permanent",
+        "description": "This doesn't leave play as turns end."
       }
     ],
     "traits": [
@@ -2803,13 +2807,13 @@
     ],
     "abilities": [
       {
-        "trigger": "Play",
-        "effect": "Stun opponent."
+        "trigger": "Continuous",
+        "effect": "This is Damage +2 for each maneuver in your ring."
       },
       {
-        "trigger": "Play",
-        "effect": "This cannot be reversed if opponent's Stamina is 15 or less.",
-        "condition": "If your Wrestler is Jon Moxley"
+        "trigger": "Continuous",
+        "condition": "While you have five or more maneuvers in your ring",
+        "effect": "This has Permanent."
       }
     ]
   },
@@ -2819,4 +2823,5 @@
     "logo": "Jon Moxley"
   }
 }
+
 ]
