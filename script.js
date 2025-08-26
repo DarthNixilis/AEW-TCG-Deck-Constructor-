@@ -47,27 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListeners();
     }
 
-    // **THE FIX IS HERE: This function is now more robust.**
     function populatePersonaSelectors() {
-        // Clear existing options except the first placeholder
         wrestlerSelect.length = 1;
         managerSelect.length = 1;
-
-        const wrestlers = cardDatabase
-            .filter(c => c.card_type === 'Wrestler' && c.id && c.title) // Ensure cards have an id and title
-            .sort((a, b) => a.title.localeCompare(b.title));
-            
-        const managers = cardDatabase
-            .filter(c => c.card_type === 'Manager' && c.id && c.title) // Ensure cards have an id and title
-            .sort((a, b) => a.title.localeCompare(b.title));
-
+        const wrestlers = cardDatabase.filter(c => c.card_type === 'Wrestler' && c.id && c.title).sort((a, b) => a.title.localeCompare(b.title));
+        const managers = cardDatabase.filter(c => c.card_type === 'Manager' && c.id && c.title).sort((a, b) => a.title.localeCompare(b.title));
         wrestlers.forEach(w => {
             const option = document.createElement('option');
             option.value = w.id;
             option.textContent = w.title;
             wrestlerSelect.appendChild(option);
         });
-
         managers.forEach(m => {
             const option = document.createElement('option');
             option.value = m.id;
@@ -164,11 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let cards = cardDatabase.filter(card => {
             const isPlayableCard = card.card_type !== 'Wrestler' && card.card_type !== 'Manager';
             if (!isPlayableCard) return false;
-            
             if (isLogoCard(card)) {
                 return selectedWrestler ? card.signature_info.logo === selectedWrestler.signature_info.logo : false;
             }
-            
             const rawText = card.text_box?.raw_text || '';
             const matchesQuery = query === '' || card.title.toLowerCase().includes(query) || rawText.toLowerCase().includes(query);
             return matchesQuery;
@@ -181,14 +169,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return cards;
     }
 
+    // **THE FIX IS HERE: This function is completely rewritten for the new UI.**
     function renderCardPool() {
         searchResults.innerHTML = '';
         searchResults.className = `card-list ${currentViewMode}-view`;
         const filteredCards = getFilteredCardPool();
+
         if (filteredCards.length === 0) {
             searchResults.innerHTML = '<p>No cards match the current filters.</p>';
             return;
         }
+
         filteredCards.forEach(card => {
             const cardElement = document.createElement('div');
             cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
@@ -196,24 +187,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (currentViewMode === 'list') {
                 cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.className = 'card-buttons';
                 if (card.cost === 0) {
-                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="starting">To Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
+                    buttonsDiv.innerHTML = `
+                        <button data-id="${card.id}" data-deck-target="starting">Starting</button>
+                        <button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>
+                    `;
                 } else {
-                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
+                    buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
                 }
+                cardElement.appendChild(buttonsDiv);
             } else { // Grid View
-                cardElement.innerHTML = `
-                    <div class="card-title" data-id="${card.id}">${card.title}</div>
-                    <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
-                `;
+                const visualHTML = generateCardVisualHTML(card);
+                cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.className = 'card-buttons';
                 if (card.cost === 0) {
-                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button></div>`;
+                    buttonsDiv.innerHTML = `
+                        <button data-id="${card.id}" data-deck-target="starting">Starting</button>
+                        <button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>
+                    `;
                 } else {
-                    cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
+                    buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
                 }
+                cardElement.appendChild(buttonsDiv);
             }
             searchResults.appendChild(cardElement);
         });
+    }
+
+    function generateCardVisualHTML(card) {
+        const imageName = toPascalCase(card.title);
+        const imagePath = `card-images/${imageName}.png`;
+        const placeholderHTML = `
+            <div class="placeholder-card">
+                <div class="placeholder-header"><span>${card.title}</span><span>C: ${card.cost ?? 'N/A'}</span></div>
+                <div class="placeholder-art-area"><span>Art Missing</span></div>
+                <div class="placeholder-type-line"><span>${card.card_type}</span></div>
+                <div class="placeholder-text-box">${card.text_box?.raw_text || ''}</div>
+                <div class="placeholder-stats"><span>D: ${card.damage ?? 'N/A'}</span><span>M: ${card.momentum ?? 'N/A'}</span></div>
+            </div>`;
+        return `
+            <img src="${imagePath}" alt="${card.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="display: none;">${placeholderHTML}</div>`;
     }
 
     function renderPersonaDisplay() {
@@ -238,27 +255,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function generateCardHTML(card) {
-        const imageName = toPascalCase(card.title);
-        const imagePath = `card-images/${imageName}.png`;
-        const placeholderHTML = `
-            <div class="placeholder-card">
-                <div class="placeholder-header"><span>${card.title}</span><span>C: ${card.cost ?? 'N/A'}</span></div>
-                <div class="placeholder-art-area"><span>Art Missing</span></div>
-                <div class="placeholder-type-line"><span>${card.card_type}</span></div>
-                <div class="placeholder-text-box">${card.text_box?.raw_text || ''}</div>
-                <div class="placeholder-stats"><span>D: ${card.damage ?? 'N/A'}</span><span>M: ${card.momentum ?? 'N/A'}</span></div>
-            </div>`;
-        return `
-            <img src="${imagePath}" alt="${card.title}" style="width: 100%; border-radius: 8px; display: block;" 
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div style="display: none;">${placeholderHTML}</div>`;
-    }
-
     function showCardModal(cardId) {
         const card = cardDatabase.find(c => c.id === cardId);
         if (!card) return;
-        modalCardContent.innerHTML = generateCardHTML(card);
+        modalCardContent.innerHTML = generateCardVisualHTML(card);
         cardModal.style.display = 'flex';
     }
 
@@ -354,9 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target.tagName === 'BUTTON' && cardId) {
                 addCardToDeck(cardId, target.dataset.deckTarget);
             } else {
-                const cardTitleSpan = target.closest('[data-id]');
-                if (cardTitleSpan) {
-                    showCardModal(cardTitleSpan.dataset.id);
+                const cardVisual = target.closest('.card-visual');
+                if (cardVisual) {
+                    showCardModal(cardVisual.dataset.id);
                 }
             }
         });
@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         modalCloseButton.addEventListener('click', () => cardModal.style.display = 'none');
-        modalCloseButton.addEventListener('click', (e) => {
+        cardModal.addEventListener('click', (e) => {
             if (e.target === cardModal) cardModal.style.display = 'none';
         });
     }

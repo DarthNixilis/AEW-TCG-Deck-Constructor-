@@ -9,6 +9,8 @@
     --success-color: #28a745;
     --danger-color: #dc3545;
     --secondary-color: #6c757d;
+    /* NEW: Added a distinct color for "Purchase" buttons */
+    --purchase-color: #6f42c1; 
 }
 
 body {
@@ -59,7 +61,7 @@ header {
     margin-bottom: 0;
 }
 
-#viewToggleBtn {
+#viewModeToggle {
     padding: 8px 12px;
     border: 1px solid var(--secondary-color);
     background-color: transparent;
@@ -106,14 +108,17 @@ h2 {
 .card-list.list-view .card-item span { cursor: pointer; }
 .card-list.list-view .card-buttons { display: flex; gap: 5px; }
 
-.card-list.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; align-content: start; }
+.card-list.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; align-content: start; }
 .grid-view .grid-card-item { border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.grid-view .grid-card-item .card-title { font-weight: bold; font-size: 0.9em; margin-bottom: 5px; cursor: pointer; flex-grow: 1; }
+/* NEW: Styles for the card image/placeholder in grid view */
+.grid-view .grid-card-item .card-visual { width: 100%; cursor: pointer; margin-bottom: 8px; }
+.grid-view .grid-card-item .card-visual img { width: 100%; display: block; border-radius: 4px; }
 .grid-view .grid-card-item .card-buttons { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; width: 100%; }
 .grid-view .grid-card-item button { width: 100%; padding: 6px; font-size: 0.8em; }
 
 .card-item button, .grid-card-item button { background-color: var(--success-color); color: white; border: none; border-radius: 4px; cursor: pointer; }
-.card-item button.btn-purchase, .grid-card-item button.btn-purchase { background-color: var(--primary-color); }
+/* NEW: Style for the purple "Purchase" button */
+.card-item button.btn-purchase, .grid-card-item button.btn-purchase { background-color: var(--purchase-color); }
 
 .deck-panel .card-item button { background-color: var(--danger-color); }
 .persona-selection select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 4px; }
@@ -137,10 +142,10 @@ h2 {
 #modalCardContent .card-text { background-color: #f8f9fa; border: 1px solid var(--border-color); padding: 10px; border-radius: 4px; margin-top: 10px; white-space: pre-wrap; }
 
 /* Placeholder Card Styles */
-.placeholder-card { border: 1px solid #ccc; border-radius: 10px; width: 100%; aspect-ratio: 63 / 88; padding: 15px; background-color: #fdfdfd; display: flex; flex-direction: column; box-sizing: border-box; color: #333; margin-bottom: 15px; }
-.placeholder-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
-.placeholder-art-area { flex-grow: 1; background-color: #e9ecef; border-radius: 5px; margin: 10px 0; display: flex; align-items: center; justify-content: center; color: #6c757d; font-style: italic; }
-.placeholder-type-line { font-style: italic; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 5px 0; text-align: center; margin-bottom: 10px; }
-.placeholder-text-box { font-size: 0.9em; flex-grow: 2; overflow-y: auto; padding: 5px; background-color: #f8f9fa; border-radius: 4px; white-space: pre-wrap; margin-bottom: 10px; }
-.placeholder-stats { display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #eee; padding-top: 5px; }
+.placeholder-card { border: 1px solid #ccc; border-radius: 10px; width: 100%; aspect-ratio: 63 / 88; padding: 10px; background-color: #fdfdfd; display: flex; flex-direction: column; box-sizing: border-box; color: #333; }
+.placeholder-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.8em; border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 5px; }
+.placeholder-art-area { flex-grow: 1; background-color: #e9ecef; border-radius: 5px; margin: 5px 0; display: flex; align-items: center; justify-content: center; color: #6c757d; font-style: italic; font-size: 0.8em; }
+.placeholder-type-line { font-style: italic; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 3px 0; text-align: center; margin-bottom: 5px; font-size: 0.8em; }
+.placeholder-text-box { font-size: 0.75em; flex-grow: 2; overflow-y: auto; padding: 3px; background-color: #f8f9fa; border-radius: 4px; white-space: pre-wrap; margin-bottom: 5px; }
+.placeholder-stats { display: flex; justify-content: space-around; font-weight: bold; border-top: 1px solid #eee; padding-top: 3px; font-size: 0.8em; }
 
