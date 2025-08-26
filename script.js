@@ -209,46 +209,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return cards;
     }
 
-    // **NEW, CORRECTED VERSION**
-    function renderCardPool() {
-        searchResults.innerHTML = '';
-        searchResults.className = `card-list ${currentViewMode}-view`;
-        const filteredCards = getFilteredCardPool();
-        if (filteredCards.length === 0) {
-            searchResults.innerHTML = '<p>No cards match the current filters.</p>';
-            return;
-        }
-        filteredCards.forEach(card => {
-            const cardElement = document.createElement('div');
-            cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
-            cardElement.dataset.id = card.id;
 
-            if (currentViewMode === 'list') {
-                cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
-                const buttonsDiv = document.createElement('div');
-                buttonsDiv.className = 'card-buttons';
-                if (card.cost === 0) {
-                    buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
-                } else {
-                    buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
-                }
-                cardElement.appendChild(buttonsDiv);
-            } else { // Grid View
-                const visualHTML = generateCardVisualHTML(card);
-                cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
-                const buttonsDiv = document.createElement('div');
-                buttonsDiv.className = 'card-buttons';
-                if (card.cost === 0) {
-                    buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
-                } else {
-                    buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
-                }
-                cardElement.appendChild(buttonsDiv);
-            }
-            searchResults.appendChild(cardElement);
-        });
+// START OF SELECTION (Line 204)
+function renderCardPool() {
+    searchResults.innerHTML = '';
+    searchResults.className = `card-list ${currentViewMode}-view`;
+    const filteredCards = getFilteredCardPool();
+    if (filteredCards.length === 0) {
+        searchResults.innerHTML = '<p>No cards match the current filters.</p>';
+        return;
     }
+    filteredCards.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
+        cardElement.dataset.id = card.id;
+        if (currentViewMode === 'list') {
+            cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'card-buttons';
+            if (card.cost === 0) {
+                buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
+            } else {
+                buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
+            }
+            cardElement.appendChild(buttonsDiv);
+        } else { // Grid View
+            const visualHTML = generateCardVisualHTML(card);
+            cardElement.innerHTML = `<div class="card-visual" data-id="${card.id}">${visualHTML}</div>`;
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'card-buttons';
+            if (card.cost === 0) {
+                buttonsDiv.innerHTML = `<button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
+            } else {
+                buttonsDiv.innerHTML = `<button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button>`;
+            }
+            cardElement.appendChild(buttonsDiv);
+        }
+        searchResults.appendChild(cardElement);
+    });
+}
+// END OF SELECTION (Line 241)
 
+
+    
     function generateCardVisualHTML(card) {
         const imageName = toPascalCase(card.title);
         const imagePath = `card-images/${imageName}.png`;
