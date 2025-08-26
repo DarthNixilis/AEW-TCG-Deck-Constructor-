@@ -47,11 +47,33 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListeners();
     }
 
+    // **THE FIX IS HERE: This function is now more robust.**
     function populatePersonaSelectors() {
-        const wrestlers = cardDatabase.filter(c => c.card_type === 'Wrestler').sort((a, b) => a.title.localeCompare(b.title));
-        const managers = cardDatabase.filter(c => c.card_type === 'Manager').sort((a, b) => a.title.localeCompare(b.title));
-        wrestlers.forEach(w => wrestlerSelect.add(new Option(w.title, w.id)));
-        managers.forEach(m => managerSelect.add(new Option(m.title, m.id)));
+        // Clear existing options except the first placeholder
+        wrestlerSelect.length = 1;
+        managerSelect.length = 1;
+
+        const wrestlers = cardDatabase
+            .filter(c => c.card_type === 'Wrestler' && c.id && c.title) // Ensure cards have an id and title
+            .sort((a, b) => a.title.localeCompare(b.title));
+            
+        const managers = cardDatabase
+            .filter(c => c.card_type === 'Manager' && c.id && c.title) // Ensure cards have an id and title
+            .sort((a, b) => a.title.localeCompare(b.title));
+
+        wrestlers.forEach(w => {
+            const option = document.createElement('option');
+            option.value = w.id;
+            option.textContent = w.title;
+            wrestlerSelect.appendChild(option);
+        });
+
+        managers.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m.id;
+            option.textContent = m.title;
+            managerSelect.appendChild(option);
+        });
     }
 
     // --- CORE GAME LOGIC & HELPERS ---
@@ -172,18 +194,14 @@ document.addEventListener('DOMContentLoaded', () => {
             cardElement.className = currentViewMode === 'list' ? 'card-item' : 'grid-card-item';
             cardElement.dataset.id = card.id;
 
-            // **THE FIX IS HERE: Updated the innerHTML to include C/D/M stats.**
             if (currentViewMode === 'list') {
-                // Display C/D/M in list view
                 cardElement.innerHTML = `<span data-id="${card.id}">${card.title} (C:${card.cost}, D:${card.damage}, M:${card.momentum})</span>`;
                 if (card.cost === 0) {
                     cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="starting">To Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
                 } else {
-                    // Use "To Purchase" for clarity
                     cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
                 }
             } else { // Grid View
-                // Display C/D/M in grid view
                 cardElement.innerHTML = `
                     <div class="card-title" data-id="${card.id}">${card.title}</div>
                     <div class="card-stats">C:${card.cost} | D:${card.damage} | M:${card.momentum}</div>
@@ -191,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (card.cost === 0) {
                     cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="starting">Starting</button><button class="btn-purchase" data-id="${card.id}" data-deck-target="purchase">Purchase</button></div>`;
                 } else {
-                    // Use "To Purchase" for clarity
                     cardElement.innerHTML += `<div class="card-buttons"><button data-id="${card.id}" data-deck-target="purchase">To Purchase</button></div>`;
                 }
             }
