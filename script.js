@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadCardDatabase() {
         try {
             // THE ONLY CHANGE IS ON THIS LINE: Removed './'
-            const response = await fetch('cardDatabase.json');
+            const response = await fetch('./cardDatabase.json');
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             cardDatabase = await response.json();
             initializeApp();
