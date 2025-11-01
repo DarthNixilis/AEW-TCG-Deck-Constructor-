@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AEW TCG Deck Constructor</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-
 
 <body>
     <header>
@@ -14,22 +14,45 @@
     </header>
 
     <main class="container">
-        <!-- Left Panel: Card Pool & Filters -->
         <div class="search-panel">
             <div class="panel-header">
                 <h2>Card Pool</h2>
-                <!-- NEW: View Toggle Button -->
-                <button id="viewModeToggle">Switch to Grid View</button>
+                <div class="view-controls-container">
+                    <div id="gridSizeControls" class="grid-size-controls">
+                        <label>Grid Columns:</label>
+                        <button data-columns="2">2</button>
+                        <button data-columns="3">3</button>
+                        <button data-columns="4">4</button>
+                    </div>
+                    <button id="viewModeToggle">Switch to List View</button>
+                </div>
             </div>
             <div class="filter-controls">
                 <input type="text" id="searchInput" placeholder="Search card name or text...">
-                <div id="cascadingFiltersContainer"></div>
+                <div id="cascadingFiltersContainer" class="cascading-filters"></div>
+                <div class="sort-filter-container">
+                    <div class="sort-controls">
+                        <label for="sortSelect">Sort by:</label>
+                        <select id="sortSelect">
+                            <option value="alpha-asc">Name (A-Z)</option>
+                            <option value="alpha-desc">Name (Z-A)</option>
+                            <option value="cost-asc">Cost (Low-High)</option>
+                            <option value="cost-desc">Cost (High-Low)</option>
+                            <option value="damage-desc">Damage (High-Low)</option>
+                            <option value="damage-asc">Damage (Low-High)</option>
+                            <option value="momentum-desc">Momentum (High-Low)</option>
+                            <option value="momentum-asc">Momentum (Low-High)</option>
+                        </select>
+                    </div>
+                    <div class="cost-filter-controls">
+                        <label><input type="checkbox" id="showZeroCost" checked> Show 0-Cost</label>
+                        <label><input type="checkbox" id="showNonZeroCost" checked> Show Non-0-Cost</label>
+                    </div>
+                </div>
             </div>
-            <!-- The card list will now have its view mode changed by JS -->
             <div id="searchResults" class="card-list list-view"></div>
         </div>
 
-        <!-- Right Panel: Persona, Decks, & Actions -->
         <div class="deck-panel">
             <div class="persona-selection">
                 <h2>Persona</h2>
@@ -46,13 +69,14 @@
             <div id="purchaseDeckList" class="deck-list-small"></div>
 
             <div class="deck-actions">
-                <button id="saveDeck">Export Deck</button>
-                <button id="clearDeck">Clear Decks</button>
+                <button id="importDeck">Import Deck</button>
+                <button id="exportDeck">Export as Text</button>
+                <button id="exportAsImageBtn">Export as Image</button>
+                <button id="clearDeck">Clear Deck</button>
             </div>
         </div>
     </main>
 
-    <!-- Modal for displaying card details -->
     <div id="cardModal" class="modal-backdrop" style="display: none;">
         <div class="modal-content">
             <span class="modal-close-button">&times;</span>
@@ -60,9 +84,21 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="importModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close-button">&times;</span>
+            <h3>Import Decklist</h3>
+            <div class="import-controls">
+                <label for="deckFileInput">Import from .txt file:</label>
+                <input type="file" id="deckFileInput" accept=".txt">
+                <textarea id="deckTextInput" rows="10" placeholder="Or paste decklist here..."></textarea>
+                <button id="processImportBtn">Import</button>
+            </div>
+            <div id="importStatus" class="import-status"></div>
+        </div>
+    </div>
+
+    <script type="module" src="main.js"></script>
 </body>
-
-
-
 </html>
+

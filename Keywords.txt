@@ -1,0 +1,24 @@
+Finisher: When an opponent attempts to reverse this, they must pay an additional cost: either pay Momentum from their Ring equal to this card's Damage, or discard a second valid reversal.
+
+Permanent: This card is not removed from the Ring during the End of Turn sequence.
+
+Ongoing: This card's text provides a continuous effect while it is in the Ring.
+
+Power Attack: As you play this maneuver, you may have it enter the Ring committed to add its Momentum value to its Damage.
+
+Focus Attack: As you play this, you may commit another card in your Ring with the same Target to add its Momentum to this card's Damage.
+
+Follow-Up: Grants additional effects if played immediately after a specified condition is met, ignoring normal priority.
+
+Cycling: You may discard this card from your hand at any time to draw a card.
+
+Resilient: You may discard this card from your hand before an opponent's maneuver resolves to reduce its damage by this card's Momentum.
+
+Stun: Your opponent must choose and commit one card in their Ring.
+
+Relentless: You may play this card from your discard pile by paying its Momentum cost. If reversed, it is placed on the bottom of your draw deck.
+
+Sudden: You may play this card from your Market by paying double its Momentum cost.
+
+Enters: An ability that triggers once, immediately after this card successfully enters the Ring.
+
