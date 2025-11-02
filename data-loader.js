@@ -1,12 +1,33 @@
 // data-loader.js
 import * as state from './config.js';
+import { initializeApp } from './app-init.js';
+
+// --- DYNAMIC PATH DETECTION ---
+function getBasePath() {
+    const path = window.location.pathname;
+    // This handles project pages like /RepoName/
+    // It finds the first slash after the initial one.
+    const secondSlashIndex = path.indexOf('/', 1); 
+    if (secondSlashIndex !== -1) {
+        // Extracts the repository name part (e.g., "/RepoName/")
+        return path.substring(0, secondSlashIndex + 1);
+    }
+    // Fallback for root deployment (e.g., username.github.io) or local server
+    return '/';
+}
+// --- END DYNAMIC PATH DETECTION ---
 
 export async function loadGameData() {
     const searchResults = document.getElementById('searchResults');
     try {
         searchResults.innerHTML = '<p>Loading card data...</p>';
-        const cardDbUrl = `./cardDatabase.txt?v=${new Date().getTime()}`;
-        const keywordsUrl = `./keywords.txt?v=${new Date().getTime()}`;
+
+        const basePath = getBasePath();
+        // Use the dynamically determined base path to build the correct URL
+        const cardDbUrl = `${basePath}cardDatabase.txt?v=${new Date().getTime()}`;
+        const keywordsUrl = `${basePath}keywords.txt?v=${new Date().getTime()}`;
+
+        console.log(`Attempting to load data from: ${basePath}`); // Helpful for debugging
 
         const [cardResponse, keywordResponse] = await Promise.all([
             fetch(cardDbUrl),
