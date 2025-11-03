@@ -53,15 +53,6 @@ h2 { font-size: 1.2rem; border-bottom: 2px solid var(--border-color); padding-bo
 .grid-view .grid-card-item { border: 1px solid var(--border-color); border-radius: 8px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .grid-view .grid-card-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
 .grid-view .card-visual { width: 100%; cursor: pointer; margin-bottom: 12px; border-radius: 6px; overflow: hidden; }
-
-/* --- THIS IS THE CRITICAL FIX --- */
-.grid-view .card-visual img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-/* --------------------------------- */
-
 .grid-view .card-buttons { margin-top: auto; display: flex; flex-direction: column; gap: 5px; width: 100%; }
 .grid-view .grid-card-item button { width: 100%; padding: 6px; font-size: 0.9em; }
 .card-list.grid-view[data-columns="2"] { grid-template-columns: repeat(2, 1fr); }
@@ -85,6 +76,18 @@ button.btn-purchase { background-color: var(--purchase-color); color: white; bor
 .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .modal-content { background-color: var(--panel-bg); padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
 .modal-close-button { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; font-weight: bold; cursor: pointer; }
+
+/* --- THIS IS THE GLOBAL FIX FOR ALL CARD IMAGES --- */
+/* This targets any image that is inside a container that also holds our placeholder logic */
+#modalCardContent img,
+.card-visual img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-width: 100%; /* Redundant but safe */
+}
+/* -------------------------------------------------- */
+
 .placeholder-card { border: 1px solid #ccc; border-radius: 10px; width: 100%; aspect-ratio: 63 / 88; padding: 15px; background-color: #fdfdfd; display: flex; flex-direction: column; box-sizing: border-box; color: #333; }
 .placeholder-header { font-weight: bold; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 5px; text-align: center; }
 .placeholder-stats-line { display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; font-weight: bold; padding: 0 5px 5px 5px; margin-bottom: 10px; border-bottom: 1px solid #eee; }
